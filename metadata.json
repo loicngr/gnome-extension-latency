@@ -1,0 +1,9 @@
+{
+  "name": "latency",
+  "description": "Show internet latency (ping). Also show if the internet connection is lost and if there is a DNS problem",
+  "uuid": "latency",
+  "shell-version": [
+    "45",
+    "46"
+  ]
+}
