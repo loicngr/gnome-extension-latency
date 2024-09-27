@@ -1,9 +1,12 @@
 {
   "name": "latency",
   "description": "Show internet latency (ping). Also show if the internet connection is lost and if there is a DNS problem",
-  "uuid": "latency",
+  "uuid": "latency@mboscovich.github.io",
+  "url": "https://github.com/mboscovich/latency",
+  "session-modes":  [ "user" ],
   "shell-version": [
     "45",
-    "46"
+    "46",
+    "47"
   ]
 }
