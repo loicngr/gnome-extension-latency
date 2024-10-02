@@ -94,7 +94,7 @@ export default class Latency extends Extension {
     let stdout = '';
 
     try {
-        const proc = Gio.Subprocess.new(['./.local/share/gnome-shell/extensions/latency@mboscovich.github.io/show-ping-time.sh'],
+        const proc = Gio.Subprocess.new([this.path + '/show-ping-time.sh'],
             Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE);
 
         const [status, stdout, stderr] = proc.communicate_utf8(null, null);
