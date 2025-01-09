@@ -45,67 +45,72 @@ const Indicator = GObject.registerClass(
     setText(text) {
       return this._label.set_text(text);
     }
-  });
+});
 
 export default class Latency extends Extension {
-  constructor(metadata) {
-    super(metadata);
+    constructor(metadata) {
+        super(metadata);
 
-    this._metadata = metadata;
-    this._uuid = metadata.uuid;
-  }
+        this._metadata = metadata;
+        this._uuid = metadata.uuid;
+    }
 
-  enable() {
+    enable() {
     this._textDecoder = new TextDecoder();
     this._timeout = null;
 
     this._indicator = new Indicator();
     // `role`, `indicator`, `position`, `box`.
     // `-1` is not OK for position, it will show at the right of system menu.
-    Main.panel.addToStatusArea(this._uuid, this._indicator, 0, "right");
+    Main.panel.addToStatusArea(this._uuid, this._indicator, 1, "left");
 
     this._timeout = GLib.timeout_add_seconds(
-      GLib.PRIORITY_DEFAULT, refreshInterval, () => {
-        const latency = this.getCurrentLatency(refreshInterval);
-        // console.log(latency);
-        this._indicator.setText(latency);
-        // Run as loop, not once.
-        return GLib.SOURCE_CONTINUE;
-      }
+        GLib.PRIORITY_DEFAULT, refreshInterval, () => {
+            this.getCurrentLatency(refreshInterval);
+            return GLib.SOURCE_CONTINUE;
+        }
     );
-  }
+    }
 
-  disable() {
+    disable() {
     if (this._indicator != null) {
-      this._indicator.destroy();
-      this._indicator = null;
+        this._indicator.destroy();
+        this._indicator = null;
     }
     this._textDecoder = null;
     this._lastSum = null;
     if (this._timeout != null) {
-      GLib.source_remove(this._timeout);
-      this._timeout = null;
+        GLib.source_remove(this._timeout);
+        this._timeout = null;
     }
-  }
-
-  getCurrentLatency(refreshInterval) {
-    let status = '';
-    let stderr = '';
-    let stdout = '';
-
-    try {
-        const proc = Gio.Subprocess.new([this.path + '/show-ping-time.sh'],
-            Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE);
-
-        const [status, stdout, stderr] = proc.communicate_utf8(null, null);
-
-        if (proc.get_successful())
-            // console.log(stdout);
-            return stdout;
-        else
-            throw new Error(stderr);
-    } catch (e) {
-        logError(e);
     }
-  }
+
+    getCurrentLatency(refreshInterval) {
+        const scriptPath = `${this.path}/show-ping-time.sh`;
+
+        try {
+            const proc = Gio.Subprocess.new(
+                [scriptPath],
+                Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+            );
+
+            proc.communicate_utf8_async(null, null, (proc, result) => {
+                try {
+                    const [status, stdout, stderr] = proc.communicate_utf8_finish(result);
+                    if (status) {
+                        this._indicator.setText(String(stdout).trim());
+                    } else {
+                        log(`Error ejecutando el script: ${String(stderr).trim()}`);
+                        this._indicator.setText("Error");
+                    }
+                } catch (e) {
+                    logError(e);
+                    this._indicator.setText("Error");
+                }
+            });
+        } catch (e) {
+            logError(e);
+            this._indicator.setText("Error");
+        }
+    }
 };

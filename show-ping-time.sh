@@ -29,3 +29,4 @@ else
 fi
 
 echo -n "${RESULT}"
+exit 0
