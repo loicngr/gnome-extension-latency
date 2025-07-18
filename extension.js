@@ -53,11 +53,13 @@ export default class Latency extends Extension {
 
         this._metadata = metadata;
         this._uuid = metadata.uuid;
+        this._settings = null;
     }
 
     enable() {
     this._textDecoder = new TextDecoder();
     this._timeout = null;
+    this._settings = this.getSettings();
 
     this._indicator = new Indicator();
     // `role`, `indicator`, `position`, `box`.
@@ -79,6 +81,7 @@ export default class Latency extends Extension {
     }
     this._textDecoder = null;
     this._lastSum = null;
+    this._settings = null;
     if (this._timeout != null) {
         GLib.source_remove(this._timeout);
         this._timeout = null;
@@ -98,7 +101,17 @@ export default class Latency extends Extension {
                 try {
                     const [status, stdout, stderr] = proc.communicate_utf8_finish(result);
                     if (status) {
-                        this._indicator.setText(String(stdout).trim());
+                        let displayText = String(stdout).trim();
+
+                        // Check if user wants to show the "Latency" label
+                        if (this._settings.get_boolean('show-latency-label')) {
+                            // Add "Latency: " prefix if it's a latency value (ends with "ms")
+                            if (displayText.endsWith('ms') && !displayText.startsWith('[')) {
+                                displayText = 'Latency: ' + displayText;
+                            }
+                        }
+
+                        this._indicator.setText(displayText);
                     } else {
                         log(`Error ejecutando el script: ${String(stderr).trim()}`);
                         this._indicator.setText("Error");

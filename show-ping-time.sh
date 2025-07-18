@@ -24,7 +24,7 @@ else
     if [ "$(host -R3 -4 -t A google.com |grep address)" = "" ];then
         RESULT="[ DNS Problem ]"
     else
-  	    RESULT="Latency: ${PING_WAN}ms"
+  	    RESULT="${PING_WAN}ms"
     fi
 fi
 
